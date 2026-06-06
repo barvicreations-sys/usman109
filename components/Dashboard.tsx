@@ -14,12 +14,16 @@ export function Dashboard() {
   const [updateMsg, setUpdateMsg] = useState('');
 
   const handleLogout = () => {
+    if (!auth) return;
     signOut(auth).then(() => window.location.reload());
   };
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth.currentUser) return;
+    if (!auth || !auth.currentUser) {
+      setUpdateMsg('Auth service not ready.');
+      return;
+    }
     try {
       await updatePassword(auth.currentUser, newPassword);
       setUpdateMsg('Password updated successfully!');
@@ -69,7 +73,7 @@ export function Dashboard() {
         <header className="flex justify-between items-center mb-12">
           <div>
             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Authenticated as</h3>
-            <div className="text-xl font-bold text-[#064E3B]">{auth.currentUser?.email}</div>
+            <div className="text-xl font-bold text-[#064E3B]">{auth?.currentUser?.email || 'Guest'}</div>
           </div>
           <div className="flex items-center gap-4">
              <div className="w-10 h-10 bg-[#D4AF37] rounded-full" />

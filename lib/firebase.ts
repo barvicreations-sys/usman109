@@ -8,6 +8,7 @@ let firebaseAuth: any;
 
 export function getFirebase() {
   if (typeof window === 'undefined') return { app: null, db: null, auth: null };
+  
   const config = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -17,6 +18,10 @@ export function getFirebase() {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
     firestoreDatabaseId: process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_DATABASE_ID,
   };
+
+  if (!config.apiKey) {
+    return { app: null, db: null, auth: null };
+  }
 
   if (!firebaseApp) {
     firebaseApp = getApps().length === 0 ? initializeApp(config) : getApps()[0];

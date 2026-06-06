@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Dashboard } from '@/components/Dashboard';
 import { 
   LogIn, 
   UserCircle, 
@@ -17,8 +18,10 @@ import {
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { getAuthService, getDb } from '@/lib/firebase';
 import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 export default function Home() {
+  const { user, loading: authLoading } = useAuth();
   const auth = getAuthService();
   const db = getDb();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -26,6 +29,11 @@ export default function Home() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
+  useEffect(() => {
+    if (user) setIsLoggedIn(true);
+    else setIsLoggedIn(false);
+  }, [user]);
+
   // View states
   const [view, setView] = useState<'login' | 'forgot' | 'search'>('login');
 
@@ -48,6 +56,11 @@ export default function Home() {
     setError('');
     setSuccess('');
     
+    if (!auth) {
+      setError('Firebase Authentication is not configured. Please set up API keys.');
+      setLoading(false);
+      return;
+    }
     try {
       const email = username.includes('@') ? username : `${username}@madrasa.com`;
       await signInWithEmailAndPassword(auth, email, password);
@@ -65,6 +78,11 @@ export default function Home() {
     setLoading(true);
     setError('');
     setSuccess('');
+    if (!auth) {
+      setError('Firebase Authentication is not configured.');
+      setLoading(false);
+      return;
+    }
     try {
       const email = resetEmail.includes('@') ? resetEmail : `${resetEmail}@madrasa.com`;
       await sendPasswordResetEmail(auth, email);
@@ -79,6 +97,10 @@ export default function Home() {
 
   const searchStudent = async () => {
     if (!studentId) return;
+    if (!db) {
+      alert('Database is not configured.');
+      return;
+    }
     setSearching(true);
     setFoundStudent(null);
     setRecentReports([]);
@@ -108,6 +130,18 @@ export default function Home() {
       setSearching(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#064E3B]" />
+      </div>
+    );
+  }
+
+  if (isLoggedIn) {
+    return <Dashboard />;
+  }
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] flex flex-col items-center justify-center p-6">
