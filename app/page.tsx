@@ -29,13 +29,13 @@ export default function Home() {
     setError('');
     
     try {
-      // Map 'admin' to an email for Firebase Auth
+      // Map username to an email for Firebase Auth
       const email = username.includes('@') ? username : `${username}@madrasa.com`;
       await signInWithEmailAndPassword(auth, email, password);
       setIsLoggedIn(true);
     } catch (err: any) {
       console.error(err);
-      setError('Invalid Credentials. Note: Please enable Email/Password in Firebase Console and ensure "admin@madrasa.com" exists with your password.');
+      setError('Invalid Credentials. Note: Ensure "Usman@madrasa.com" is created in Firebase Auth with password "Usman109".');
     } finally {
       setLoading(false);
     }
@@ -111,7 +111,7 @@ export default function Home() {
                 type="text" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Manager Username"
+                placeholder="e.g. Usman"
                 className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-madrasa-green transition-all"
               />
             </div>
@@ -121,7 +121,7 @@ export default function Home() {
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="e.g. Usman109"
                 className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-madrasa-green transition-all"
               />
             </div>
