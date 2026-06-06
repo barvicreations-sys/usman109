@@ -1,0 +1,6 @@
+{
+  "name": "Madrasa Management System",
+  "description": "Comprehensive management software for Madrasa Jamia Naqshbandia, featuring student CRUD, attendance tracking, financial records, and PDF report generation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

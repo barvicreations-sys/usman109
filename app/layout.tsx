@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, Noto_Sans_Arabic } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/contexts/AuthContext';
+import { LanguageProvider } from '@/hooks/use-language';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -28,7 +29,9 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${notoUrdu.variable}`}>
       <body suppressHydrationWarning className="bg-madrasa-cream min-h-screen text-slate-900 font-sans">
         <AuthProvider>
-          {children}
+          <LanguageProvider>
+            {children}
+          </LanguageProvider>
         </AuthProvider>
       </body>
     </html>

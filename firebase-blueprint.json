@@ -1,0 +1,63 @@
+{
+  "entities": {
+    "Student": {
+      "title": "Student",
+      "description": "Student admission and profile record",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "description": "Unique registration number" },
+        "name": { "type": "string" },
+        "fatherName": { "type": "string" },
+        "phone": { "type": "string" },
+        "admissionDate": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["active", "inactive"] }
+      },
+      "required": ["studentId", "name", "fatherName", "admissionDate", "status"]
+    },
+    "Attendance": {
+      "title": "Attendance",
+      "description": "Daily attendance record",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["present", "absent", "leave"] }
+      },
+      "required": ["studentId", "date", "status"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "Educational progress report",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "sabaq": { "type": "string" },
+        "sabqi": { "type": "string" },
+        "manzil": { "type": "string" },
+        "namaz": { "type": "integer", "description": "Number of prayers offered" }
+      },
+      "required": ["studentId", "date"]
+    },
+    "Finance": {
+      "title": "Finance",
+      "description": "Financial transaction record",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "description": { "type": "string" },
+        "amount": { "type": "number" },
+        "category": { "type": "string" },
+        "type": { "type": "string", "enum": ["income", "expense"] }
+      },
+      "required": ["date", "amount", "type"]
+    }
+  },
+  "firestore": {
+    "students": { "schema": "Student", "description": "Central student records" },
+    "attendance": { "schema": "Attendance", "description": "Attendance history" },
+    "reports": { "schema": "Report", "description": "Student progress reports" },
+    "income": { "schema": "Finance", "description": "Income records" },
+    "expense": { "schema": "Finance", "description": "Expense records" }
+  }
+}

@@ -19,13 +19,31 @@ import { useLanguage } from '@/hooks/use-language';
 import { StudentManagement } from './StudentManagement';
 import { AttendanceModule, FinanceManagement, ReportsModule } from './Modules';
 import { ProfileSection } from './ProfileCards';
+import { useFirestoreCollection } from '@/hooks/use-firebase-crud';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
 
 type Tab = 'dashboard' | 'students' | 'attendance' | 'finance' | 'reports';
 
 export function Dashboard() {
   const { t, isRTL } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
-  const [loading, setLoading] = useState(false);
+  
+  const { data: students } = useFirestoreCollection<any>('students');
+  const { data: attendance } = useFirestoreCollection<any>('attendance');
+  const { data: income } = useFirestoreCollection<any>('income');
+  const { data: expense } = useFirestoreCollection<any>('expense');
+
+  const stats = {
+    students: students.length,
+    attendance: attendance.filter(a => a.date === new Date().toISOString().split('T')[0] && a.status === 'present').length,
+    income: income.reduce((acc, curr) => acc + curr.amount, 0),
+    expense: expense.reduce((acc, curr) => acc + curr.amount, 0),
+  };
+
+  const handleLogout = () => {
+    signOut(auth).then(() => window.location.reload());
+  };
 
   const menuItems = [
     { id: 'dashboard', label: t.dashboard || 'Dashboard', icon: LayoutDashboard },
@@ -70,7 +88,10 @@ export function Dashboard() {
           ))}
         </nav>
 
-        <button className="px-6 py-4 bg-red-900/40 text-red-200 flex items-center gap-3 hover:bg-red-800 transition-all border-t border-white/5">
+        <button 
+          onClick={handleLogout}
+          className="px-6 py-4 bg-red-900/40 text-red-200 flex items-center gap-3 hover:bg-red-800 transition-all border-t border-white/5"
+        >
           <LogOut className="w-5 h-5" />
           <span className="text-sm font-bold tracking-tight">Logout</span>
         </button>
@@ -91,7 +112,7 @@ export function Dashboard() {
           </div>
 
           <div className="flex flex-col items-end">
-            <div className="text-sm font-bold text-madrasa-green">User: Admin@109</div>
+            <div className="text-sm font-bold text-madrasa-green">User: {auth.currentUser?.email || 'Admin'}</div>
             <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Admin Access</div>
           </div>
         </header>
@@ -113,15 +134,15 @@ export function Dashboard() {
                 exit={{ opacity: 0, y: -20 }}
                 className="space-y-8"
               >
-                {/* Stats Grid - 4 Columns per theme */}
+                {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <StatCard label="Total Students" value="482" />
-                  <StatCard label="Today Attendance" value="94%" color="text-green-600" />
-                  <StatCard label="Monthly Income" value="Rs. 124k" />
-                  <StatCard label="Remaining Balance" value="Rs. 45k" color="text-madrasa-gold" />
+                  <StatCard label="Total Students" value={stats.students.toString()} />
+                  <StatCard label="Today Present" value={stats.attendance.toString()} color="text-green-600" />
+                  <StatCard label="Total Income" value={`Rs. ${stats.income.toLocaleString()}`} />
+                  <StatCard label="Total Expense" value={`Rs. ${stats.expense.toLocaleString()}`} color="text-rose-500" />
                 </div>
 
-                {/* Profile Cards Section - Core Geometric Balance Element */}
+                {/* Profile Cards Section */}
                 <ProfileSection />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -129,7 +150,7 @@ export function Dashboard() {
                   <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
                       <h3 className="font-bold text-madrasa-green">Recent Students</h3>
-                      <button className="text-xs font-bold text-madrasa-gold hover:underline uppercase tracking-widest">View All</button>
+                      <button onClick={() => setActiveTab('students')} className="text-xs font-bold text-madrasa-gold hover:underline uppercase tracking-widest">View All</button>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left">
@@ -142,13 +163,13 @@ export function Dashboard() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                          {[1, 2, 3, 4, 5].map((i) => (
-                            <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="px-6 py-4 font-mono text-xs font-bold text-slate-400">#JN-00{i}</td>
-                              <td className="px-6 py-4 font-bold text-slate-800">Ahmad Khan</td>
-                              <td className="px-6 py-4 text-sm text-slate-500">Muhammad Khan</td>
+                          {students.slice(0, 5).map((s) => (
+                            <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
+                              <td className="px-6 py-4 font-mono text-xs font-bold text-slate-400">{s.studentId}</td>
+                              <td className="px-6 py-4 font-bold text-slate-800">{s.name}</td>
+                              <td className="px-6 py-4 text-sm text-slate-500">{s.fatherName}</td>
                               <td className="px-6 py-4">
-                                <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded uppercase tracking-tighter">Active</span>
+                                <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-tighter ${s.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>{s.status}</span>
                               </td>
                             </tr>
                           ))}
@@ -161,15 +182,16 @@ export function Dashboard() {
                   <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                     <h3 className="font-bold text-madrasa-green mb-6 pb-2 border-b border-slate-100">Quick Tools</h3>
                     <div className="grid grid-cols-2 gap-4">
-                      <QuickButton icon={UserPlus} label="New Student" />
-                      <QuickButton icon={Calendar} label="Attendance" />
-                      <QuickButton icon={Plus} label="Add Expense" />
-                      <QuickButton icon={BookOpen} label="Reports" />
+                      <QuickButton onClick={() => setActiveTab('students')} icon={UserPlus} label="New Student" />
+                      <QuickButton onClick={() => setActiveTab('attendance')} icon={Calendar} label="Attendance" />
+                      <QuickButton onClick={() => setActiveTab('finance')} icon={Wallet} label="Finance" />
+                      <QuickButton onClick={() => setActiveTab('reports')} icon={BookOpen} label="Reports" />
                     </div>
                   </div>
                 </div>
               </motion.div>
             )}
+
 
             {activeTab === 'students' && (
               <motion.div key="students" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -229,9 +251,12 @@ function StatCard({ label, value, color = "text-slate-800" }: { label: string; v
   );
 }
 
-function QuickButton({ icon: Icon, label }: { icon: any; label: string }) {
+function QuickButton({ icon: Icon, label, onClick }: { icon: any; label: string; onClick?: () => void }) {
   return (
-    <button className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-madrasa-green hover:text-white transition-all gap-2 group">
+    <button 
+      onClick={onClick}
+      className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-madrasa-green hover:text-white transition-all gap-2 group w-full"
+    >
       <Icon className="w-6 h-6 text-madrasa-green group-hover:text-white" />
       <span className="text-[10px] font-bold uppercase tracking-tight">{label}</span>
     </button>
